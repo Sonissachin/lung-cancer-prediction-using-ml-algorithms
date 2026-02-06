@@ -1,44 +1,62 @@
 import streamlit as st
+import pandas as pd
 import pickle
-import numpy as np
 import os
 
-# -------------------------------
-# Load trained model safely
-# -------------------------------
 model_path = "lung_cancer_model.pkl"
-
 if not os.path.exists(model_path):
-    st.error("❌ Model file not found! Make sure 'lung_cancer_model.pkl' is in the same folder as this app.")
+    st.error("❌ Model file not found! Make sure 'lung_cancer_model.pkl' is in the same folder.")
     st.stop()
+with open(model_path, "rb") as f:
+    model = pickle.load(f)
 
-# Load the trained Decision Tree model
-with open(model_path, "rb") as file:
-    model = pickle.load(file)
-
-# -------------------------------
-# Streamlit App UI
-# -------------------------------
+st.set_page_config(page_title="🫁 Lung Cancer Prediction", layout="centered")
 st.title("🫁 Lung Cancer Prediction App")
+st.markdown("Answer the following questions:")
 
-# User Inputs
-age = st.number_input("Enter Age", min_value=18, max_value=100)
-smoke = st.selectbox("Do you smoke?", ["Yes", "No"])
-alcohol = st.selectbox("Do you drink alcohol?", ["Yes", "No"])
-cough = st.selectbox("Do you have persistent coughing?", ["Yes", "No"])
+def yes_no_to_numeric(ans):
+    return 1 if ans == "Yes" else 2
 
-# -------------------------------
-# Helper function to convert Yes/No to 1/0
-# -------------------------------
-def yn(value):
-    return 1 if value == "Yes" else 0
+feature_names = [
+    "YELLOW_FINGERS",
+    "ANXIETY",
+    "PEER_PRESSURE",
+    "CHRONIC_DISEASE",
+    "FATIGUE",
+    "ALLERGY",
+    "WHEEZING",
+    "ALCOHOL_CONSUMING",
+    "COUGHING",
+    "SWALLOWING_DIFFICULTY",
+    "CHEST_PAIN"
+]
 
-# Create input feature array
-features = np.array([[age, yn(smoke), yn(alcohol), yn(cough)]])
+YELLOW_FINGERS = st.selectbox("Do you have yellow fingers?", ["Yes", "No"])
+ANXIETY = st.selectbox("Do you feel anxious frequently?", ["Yes", "No"])
+PEER_PRESSURE = st.selectbox("Do you face peer pressure?", ["Yes", "No"])
+CHRONIC_DISEASE = st.selectbox("Do you have a chronic disease?", ["Yes", "No"])
+FATIGUE = st.selectbox("Do you feel fatigue often?", ["Yes", "No"])
+ALLERGY = st.selectbox("Do you have any allergies?", ["Yes", "No"])
+WHEEZING = st.selectbox("Do you experience wheezing?", ["Yes", "No"])
+ALCOHOL_CONSUMING = st.selectbox("Do you consume alcohol?", ["Yes", "No"])
+COUGHING = st.selectbox("Do you have persistent coughing?", ["Yes", "No"])
+SWALLOWING_DIFFICULTY = st.selectbox("Do you have difficulty swallowing?", ["Yes", "No"])
+CHEST_PAIN = st.selectbox("Do you have chest pain?", ["Yes", "No"])
 
-# -------------------------------
-# Prediction logic
-# -------------------------------
+features = pd.DataFrame([[
+    yes_no_to_numeric(YELLOW_FINGERS),
+    yes_no_to_numeric(ANXIETY),
+    yes_no_to_numeric(PEER_PRESSURE),
+    yes_no_to_numeric(CHRONIC_DISEASE),
+    yes_no_to_numeric(FATIGUE),
+    yes_no_to_numeric(ALLERGY),
+    yes_no_to_numeric(WHEEZING),
+    yes_no_to_numeric(ALCOHOL_CONSUMING),
+    yes_no_to_numeric(COUGHING),
+    yes_no_to_numeric(SWALLOWING_DIFFICULTY),
+    yes_no_to_numeric(CHEST_PAIN)
+]], columns=feature_names)
+
 if st.button("Predict"):
     try:
         pred = model.predict(features)
@@ -48,3 +66,4 @@ if st.button("Predict"):
             st.success("✅ Low Risk of Lung Cancer")
     except Exception as e:
         st.error(f"Prediction failed: {e}")
+
